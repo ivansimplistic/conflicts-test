@@ -1,0 +1,8 @@
+git config core.hooksPath .githooks
+
+# Disabled because subtree is being pushed to the main repo, and this is not wanted.
+#git remote add -f uno-cursor-rules https://github.com/Simplistic-GE/uno-cursor-rules
+#git merge -s ours --no-commit --allow-unrelated-histories uno-cursor-rules/main
+#git read-tree --prefix= -u uno-cursor-rules/main
+#git commit -m "Subtree merged in uno-cursor-rules"
+#git subtree pull --prefix=.cursor/rules/ uno-cursor-rules main

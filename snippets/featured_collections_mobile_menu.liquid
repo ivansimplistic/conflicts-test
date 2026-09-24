@@ -1,0 +1,125 @@
+{%- comment -%}
+  Render HTML/CSS for a product carousel section with common settings. 
+  
+  Accepts:
+    - block: {Object} Required. Liquid object
+    - cardType: {String} Required. Indicate the type of cards contained, which allow to get the correct global settings.
+    - headContentHtml: {String} Optional. HTML content to be injected in the head of the block.
+    - itemsHtml: {String} Required. HTML content with custom items. The items must be wrapped in a div.keen-slider-slide
+
+  Usage:  
+  {%- render 'featured_collections_mobile_menu', block: block, cardType: 'collection', itemsHtml: itemsHtml -%}
+{%- endcomment -%}
+
+{%- liquid 
+  assign cardType = cardType | default: 'collection'
+  assign title = title | default: block.settings.title
+  assign fullWidth = block.settings.full_width | default: false
+  assign showPageInfo = showPageInfo | default: settings.carousel_show_slider_pages, allow_false: true
+  if matchTitleHeight == nil
+    assign cardMatchTitleHeight = cardType | append: '_match_title_height'
+    assign matchTitleHeight = matchTitleHeight | default: settings[cardMatchTitleHeight]
+  endif
+  
+  if title != blank or headContentHtml != blank
+    assign hasHeadContent = true
+  endif
+-%}
+
+{{ 'section_multi_item.css' | asset_url | stylesheet_tag }}
+<style>
+  #mobile-menu .featured-collections.block-{{block.id}} {  
+    --section-padding-top: 0;
+    --section-padding-bottom: 0;
+    --text-padding: calc(var(--global-sections-padding) * 0.5);
+    --text-width: {{block.settings.text_width | default: 55 | append: 'em' | replace: '100em', '100%' }};
+    --container-padding: var(--slide-in-modal-padding);
+    --collection-card-border-radius: {{ block.settings.collection_card_border_radius }}em;
+    --collection-card-img-height: {{ block.settings.collection_card_img_height }}%;
+    --collection-card-title-size: {{ block.settings.collection_card_title_size }}em;
+    --collection-card-title-weight: {{ block.settings.collection_card_title_weight }};
+    --collection-card-overlay-opacity: {{ block.settings.collection_card_overlay_opacity | divided_by: 100.00 }};
+  }
+</style>
+
+{%- liquid
+  assign layout = 'carousel'
+  assign carouselClass = cardType | append: 's-carousel'
+  assign loop = false
+  assign center = false
+  assign rootSize = 10
+  assign gridGapMobile = settings.grid_gap_mobile | times: rootSize | round
+  assign spacingRateMobile = block.settings.items_spacing | divided_by: 100.00
+  assign spacingScriptMobile = gridGapMobile | times: spacingRateMobile
+-%}
+<script src="{{ 'component_carousel.js' | asset_url }}" defer="defer"></script>
+
+<div class="section-multi-item head-position-top section-{{layout}} {{carouselClass}} {% if fullWidth %}full-width{% endif %} {% if fullWidth == false %}overflow-hidden{% endif %}">
+  {% unless fullWidth %}<div class="container">{% endunless %}
+    <component-carousel class="content scheme color-{{block.settings.content_color_scheme}} text-{{block.settings.text_align}}"
+      data-carousel-mode="{{settings.carousel_mode}}" 
+      data-carousel-autoplay="{{block.settings.carousel_autoplay}}" 
+      data-carousel-automove="0" 
+      data-carousel-loop-desktop="{{loop}}" 
+      data-carousel-loop-mobile="{{loop}}" 
+      data-carousel-centered-desktop="{{center}}" 
+      data-carousel-centered-mobile="{{center}}" 
+      data-carousel-spacing-desktop="{{spacingScriptMobile}}" 
+      data-carousel-spacing-tablet="{{spacingScriptMobile}}" 
+      data-carousel-spacing-mobile="{{spacingScriptMobile}}" 
+      data-slides-scroll-mode="{{settings.carousel_slides_scroll_mode}}"
+      data-slides-per-view-desktop="{{block.settings.items_per_view_tablet}}" 
+      data-slides-per-view-tablet="{{block.settings.items_per_view_tablet}}" 
+      data-slides-per-view-mobile="{{block.settings.items_per_view_mobile}}"
+      data-match-height-selectors="{% if matchTitleHeight %}.title{% endif %}"
+      data-init-ondemand="true"
+    >
+      {%- capture header -%}
+        {%- if hasHeadContent -%}
+          <div class="head {% if fullWidth %}container{% endif %} flex medium-down--flex-wrap {{block.settings.text_align | replace: 'left', 'align-items-end justify-content-between' | replace: 'right', 'row-reverse align-items-end justify-content-between' | replace: 'center', 'direction-column align-items-center'}} {{block.settings.text_align_mobile | default: block.settings.text_align | replace: 'left', 'medium-down--align-items-start medium-down--justify-content-between' | replace: 'right', 'medium-down--row-reverse medium-down--align-items-end medium-down--justify-content-between' | replace: 'center', 'medium-down--direction-column medium-down--align-items-center'}}">
+            {%- if hasHeadContent -%}
+              <div class="richtext-wrap one-whole text-{{block.settings.text_align}} medium-down--text-{{block.settings.text_align_mobile | default: block.settings.text_align}}">
+                <div class="flex flex-gap justify-content-between">
+                  {%- if title != blank -%}
+                    <div class="{{block.settings.title_size | replace: 0, '1-xl' | replace: -1, '1-xxl' | prepend: 'h' }} {{block.settings.title_font_style}}">
+                      {{title | replace: '[br]', '<br aria-hidden="true" />' | replace: '[hi]', '<span class="highlight">' | replace: '[/hi]', '</span>' |  replace: '[hi2]', '<span class="highlight2">' | replace: '[/hi2]', '</span>'}}
+                    </div>
+                  {%- endif -%}
+                  {%- if block.settings.show_arrows -%}
+                    <div class="keen-arrows flex justify-content-center">
+                      {% render 'carousel_arrow', type: 'prev' %}
+                      {% if showPageInfo and block.settings.show_dots == false or settings.carousel_dots_shape == 'circle' %}
+                        <div class="keen-slider-page brand-font"></div>
+                      {% endif %}
+                      {% render 'carousel_arrow', type: 'next' %}
+                    </div>
+                  {%- endif -%}
+                </div>
+                {{headContentHtml}}
+              </div>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      {%- endcapture -%}
+
+      {{header}}
+      <div class="keen keen-slider-container medium-down--container-left medium-down--container-right">
+        <div class="">
+          <div class="keen-slider items-wrapper">
+            {{itemsHtml}}
+          </div>
+        </div>
+      </div>
+      {% if block.settings.show_dots %}
+        <div class="{% if fullWidth %}container{% endif %}">
+          <div class="keen-dots {{settings.carousel_dots_shape}} {{settings.carousel_dots_border | replace: true, 'border'}}">
+            {% if showPageInfo and settings.carousel_dots_shape == 'line' %}
+              <div class="keen-slider-page brand-font"></div>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+    </component-carousel>
+  {% unless fullWidth %}</div>{% endunless %}
+</div>

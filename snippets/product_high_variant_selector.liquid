@@ -1,0 +1,148 @@
+{% doc %}
+  Renders the `<product-high-variants>` UI for products with more than 250 variants: color/label
+  swatches (`product-hvswatch`) or dropdowns (`product-hvdropdown`), driven by `product.options_with_values`.
+
+  Which option values are printed (`showThisValue`, identical logic in both loops) is controlled by
+  internal `showUnavailable` (`none` | `same_product` | `all`, default `same_product` in the assign block):
+
+  1. `showUnavailable == all` — every value in `options_with_values`.
+  2. Else if any of: `value.available`, `value.selected`, `value.variant != blank` — includes real
+     SKUs that are sold out (Shopify still exposes `value.variant`).
+  3. Else if `showUnavailable == same_product` and `value.product_url == blank` — same-PDP option rows
+     without a resolving variant (invalid combo, stale selection after another option changes). Keeps the
+     list stable; dropdown may append "Unavailable" via `optionLabelSuffix`.
+
+  Combined listing: non-blank `value.product_url` only appears when step 2 already matched unless `all`.
+  Mode `none` skips step 3 only; sold-out rows still appear when `value.variant != blank`.
+
+  @param {object} product - Product with `options_with_values`
+  @param {object} defaultVariant - Variant used for the hidden `id` input and `colorOnly` hidden options
+  @param {boolean} [colorOnly] - If true, non-color options render as hidden inputs (default: false)
+  @param {string} [optionsInfoJson] - Optional escaped JSON for `data-info` on the root element
+  @param {object} [block] - Block object when rendered in a section (used for stable input name prefixes)
+  @param {object} [section] - Section object when rendered in a section (fallback for input name prefixes)
+
+  @example
+  {% render 'product_high_variant_selector', product: product, defaultVariant: product.selected_or_first_available_variant %}
+
+  @example
+  {% render 'product_high_variant_selector',
+    product: product,
+    defaultVariant: product.selected_or_first_available_variant,
+    colorOnly: true %}
+{% enddoc %}
+
+{%- liquid
+  assign colorSwatchesOptions = settings.product_color_swatches | downcase | replace: ', ', ',' | split: ','
+  assign labelSwatchesOptions = settings.product_label_swatches | downcase | replace: ', ', ',' | split: ','
+  assign showUnavailable = 'same_product'
+  assign optionsStop = false
+  assign colorOnly = colorOnly | default: false, allow_false: true
+-%}
+<product-high-variants class="product-variants" {% if optionsInfoJson != blank %}data-info="[{{optionsInfoJson | escape}}]"{% endif %}>
+
+{% for optionWithValues in product.options_with_values %}
+  {%- liquid
+    assign inputName = block.id | default: section.id | append: '-' | append: product.id | append: '-' | append: forloop.index
+    assign downCaseLabel = optionWithValues.name | downcase
+    if colorSwatchesOptions contains downCaseLabel
+      assign isColorOption = true
+    else
+      assign isColorOption = false
+    endif
+  -%}
+  {%- if isColorOption == false and colorOnly == true-%}
+    <input type="hidden" class="hidden-option-value" name="{{ inputName }}" value="{{ defaultVariant.options[forloop.index0] }}" >
+  {%- elsif isColorOption or labelSwatchesOptions contains downCaseLabel or labelSwatchesOptions contains '*' -%}
+    <product-hvswatch class="options-selector product-swatch {% if isColorOption %}color-swatches{% endif %}" data-option="{{forloop.index}}" data-label="{{ optionWithValues.name | escape }}" aria-labelledby="{{ inputName }}" role="radiogroup">
+      <div class="option-name small-label">
+        <span id="{{ inputName }}">{{ optionWithValues.name }}: </span>
+        <span aria-hidden="true" class="option-value">{{ optionWithValues.selected_value }}</span>
+      </div>
+      <div class="swatch-group flex flex-wrap">
+        {% for value in optionWithValues.values %}
+          {%- liquid
+            assign showThisValue = false
+            if showUnavailable == 'all' or value.available or value.selected or value.variant != blank
+              assign showThisValue = true
+            elsif showUnavailable == 'same_product'
+              if value.product_url == blank
+                assign showThisValue = true
+              endif
+            endif
+          -%}
+          {%- if showThisValue -%}
+            {%- assign inputId = inputName | append: '-' | append: forloop.index -%}
+            <div class="swatch" data-available="{{ value.available }}">
+              <input {% if value.selected %}checked{% endif %} type="radio" id="{{ inputId }}" name="{{ inputName }}" value="{{ value.id }}" data-value="{{ value }}" data-product-url="{{ value.product_url }}" data-variantid="{{ value.variant.product.selected_or_first_available_variant.id }}">
+              <label for="{{ inputId }}">
+                <div class="label-inner flex align-items-center justify-content-center animation swatch-{{ value | handleize }} {% if isColorOption %} color-{{ value | handleize }}{% endif %} ">
+                  <span>{{ value }}</span>
+                  {% if value.variant.image and settings.use_variant_images_as_swatches and isColorOption %}
+                    <img loading="lazy" src="{{ value.variant.image | image_url: width: 80 }}" alt="" width="80" height="80">
+                  {% endif %} 
+                </div>
+              </label>
+            </div>
+          {%- elsif value.selected and value.available == false -%}
+            {%- assign optionsStop = true -%}
+          {%- endif -%}
+        {% endfor %}
+      </div>
+      
+    </product-hvswatch>
+    {% if isColorOption %}
+      <style>
+        {%- for value in optionWithValues.values -%}
+          {%- if value.swatch.color != blank -%}
+          product-high-variants .color-{{ value | handleize }} {background-color: {{ value.swatch.color }} }
+          {%- endif -%}
+        {%- endfor %}
+      </style>
+    {% endif %}
+  {%- else -%}
+    <product-hvdropdown class="product-dropdown" data-option="{{forloop.index}}" data-label="{{ optionWithValues.name }}" data-required="false">
+      <label class="option-name small-label" for="{{ inputName }}">
+        {{ optionWithValues.name }}: 
+      </label>
+      <div class="field">
+        <svg aria-hidden="true" class="icon icon-arrow-down" viewBox="0 0 32 32"><path class="stroke" d="M27,10,16,22,5,10"></path></svg> 
+        <select id="{{ inputName }}" name="{{ inputName }}">
+          {% for value in optionWithValues.values %}
+            {%- liquid
+              assign showThisValue = false
+              if showUnavailable == 'all' or value.available or value.selected or value.variant != blank
+                assign showThisValue = true
+              elsif showUnavailable == 'same_product'
+                if value.product_url == blank
+                  assign showThisValue = true
+                endif
+              endif
+            -%}
+            {%- if showThisValue -%}
+              {%- liquid
+                assign optionLabelSuffix = ''
+                if value.variant != blank and value.variant.available == false
+                  assign optionLabelSuffix = 'product_main.sold_out_option_value'
+                elsif value.available == false
+                  assign optionLabelSuffix = 'product_main.unavailable_option_value'
+                endif
+              -%}
+              <option {% if value.selected %}selected{% endif %} value="{{ value.id }}" data-value="{{ value }}" data-product-url="{{ value.product_url }}" {% if value.variant != blank %}data-variantid="{{ value.variant.product.selected_or_first_available_variant.id }}"{% endif %}>{{ value }}{% if optionLabelSuffix != blank %}{{ optionLabelSuffix | t }}{% endif %}</option>
+            {%- elsif value.selected and value.available == false -%}
+              {%- assign optionsStop = true -%}
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+    </product-hvdropdown>
+  {%- endif -%}
+  {%- liquid
+    if optionsStop and showUnavailable != 'all'
+      break
+    endif
+  -%}
+{% endfor %}
+<input class="single-option-selector" data-variant-id="true" type="hidden" name="id" value="{{defaultVariant.id}}" />
+
+</product-high-variants>

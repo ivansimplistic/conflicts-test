@@ -1,0 +1,105 @@
+{%- liquid 
+  assign defaultVariant = defaultVariant | default: productCard.selected_or_first_available_variant
+  assign pricePosition = containerSettings.price_position | default: 'line'
+  assign cardDesign = containerSettings.card_design | default: 'stack'
+  assign contentColorScheme = contentColorScheme | default: containerSettings.color_scheme | default: nil
+  assign cardsColorScheme = cardsColorScheme | default: containerSettings.cards_color_scheme | default: nil
+  if cardDesign == 'quickview'
+    assign showQuickView = true
+  else
+    assign showQuickView = containerSettings.show_quickview | default: settings.product_card_quick_view, allow_false: true
+  endif
+
+-%}
+{%- capture quickViewBtn -%}
+  <button type="button" tabindex="0" class="cta {% if settings.product_card_cta_style == 'buttons' %}btn smaller flex align-items-center justify-content-center{% endif %} quick-view-trigger no-highlight-hover" data-url="{{ productCard.url | within: collection }}" aria-label="{{ 'product_card_atc.quick_view_button' | t | escape }}">
+    <span class="circle flex align-items-center justify-content-center {% unless settings.product_card_cta_style == 'buttons' %}ease-animation{% endunless %}">{%- render 'icons', icon: 'eye' -%}</span>
+  </button>
+{%- endcapture -%}
+{%- capture badges -%}
+  {%- render 'product_badges', product: productCard, defaultVariant: defaultVariant, saleRound: settings.sale_round -%}
+{%- endcapture -%}
+
+<product-card-simple-atc class="product-card simple-atc card-design-{{ cardDesign }} price-position-{{ pricePosition }} flex align-items-start common-card text-left trigger-floating-buttons {% if settings.product_card_border %}scheme-border-box{% endif %} {% if settings.product_card_image_full_width %}image-full-width{% endif %} {% if cardsColorScheme != blank %}scheme color-{{cardsColorScheme}}{% endif %} same-scheme-{%- if cardsColorScheme == contentColorScheme -%}true{%- else -%}false{%- endif -%}">
+  <div class="image-container ease-animation">
+    <div class="img-wrap mode-static">
+      <img class="img main lazyload" alt="" data-sizes="auto" data-srcset="{{productCard.featured_image | image_url: width: 200}}" width="{{ productCard.featured_image.width }}" height="{{ productCard.featured_image.height }}" />
+    </div>
+    <div class="product-badges">
+      {{ badges }}
+    </div>
+    {%- if showQuickView and cardDesign != 'quickview' -%}
+      <div class="floating-buttons {{settings.product_card_cta_style}} flex flex-wrap {% if settings.product_card_cta_style == 'bubbles' %}direction-column{% endif %} hide-quickview">
+        {{quickViewBtn}}
+      </div>
+    {%- endif -%}
+  </div>
+  <div class="info flex-1">
+    <div class="info-inner direction-column">
+      <a href="{{ productCard.url | within: collection }}" class="product-card-url">
+        <span class="title">{{ productCard.title }}</span>
+      </a>
+      {%- if pricePosition == 'line' -%}
+        <div class="price flex justify-content-center">
+          <span class="compare {% unless defaultVariant.compare_at_price > defaultVariant.price %}hide{% endunless %}">
+            <span class="visually-hidden">. {{ 'product.original_price_label' | t }}: </span>
+            <span class="compare-at-price">{{ defaultVariant.compare_at_price | money | remove: '.00' }}</span>
+          </span>
+          <span class="final">
+            <span class="visually-hidden">. {{ 'product.final_price_label' | t }}: </span>
+            <span class="final-price">{{ defaultVariant.price | money | remove: '.00' }}</span>
+          </span>
+        </div>
+      {%- endif -%}
+      {%- capture textLine -%}
+        {%- if productCard.description != blank -%}
+          {{ productCard.description | strip_html | truncatewords: 12, '...' }}
+        {%- endif -%}
+      {%- endcapture -%}
+
+      {%- if cardDesign == 'quickview' -%}
+        <div class="info-inner-bottom">
+          <div class="p4">{{ textLine | default: '&nbsp;' }}</div>
+          <div class="card-buttons {{settings.product_card_cta_style}}">{{quickViewBtn}}</div>
+        </div>
+      {%- else -%}
+        <p class="p4">{{ textLine }}</p>
+        <div class="simple-atc-controls">
+          {%- if productCard.has_only_default_variant -%}
+            <input type="hidden" data-name="id" value="{{defaultVariant.id}}" />
+          {%- else -%}
+            <div class="field">
+              <select data-name="id" aria-label="{{ 'product_card_atc.select_a_variant_label' | t | escape }}">
+                {%- for var in productCard.variants -%}
+                  {%- if var.available -%}
+                    {%- if var.image != blank -%}
+                      {%- assign variantImage = var.image -%}
+                    {%-  else -%}
+                      {%- assign variantImage = productCard.featured_image -%}
+                    {%-  endif -%}
+                    <option value="{{var.id}}" data-final-price="{{var.price | money_without_currency}}" {% if var.compare_at_price > var.price %}data-compare-at-price="{{var.compare_at_price | money_without_currency}}"{% endif %} data-variant-image="{{variantImage | image_url: width: 200}}">{{var.title}}</option>
+                  {%- endif -%}
+                {%- endfor -%}
+              </select>
+              {%- render 'icons', icon: 'chevron-down' -%}
+            </div>
+          {%- endif -%}
+          <button class="btn v2 simple-atc-btn" type="button">
+            {{- 'product_card_atc.add_to_cart_button' | t -}}
+            {%- if pricePosition == 'in-button' -%}
+              <span class="bar"></span>
+              <div class="price flex justify-content-center">
+                <span class="final">
+                  <span class="visually-hidden">. {{ 'product.final_price_label' | t }}: </span>
+                  <span class="final-price">{{ defaultVariant.price | money | remove: '.00' }}</span>
+                </span>
+              </div>
+            {%- endif -%}
+          </button>
+        </div>
+      {%- endif -%}
+
+      
+    </div>
+  </div>
+</product-card-simple-atc>

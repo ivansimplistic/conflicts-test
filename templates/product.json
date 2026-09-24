@@ -1,0 +1,109 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "product_main": {
+      "type": "product_main",
+      "blocks": {
+        "breadcrumb": {
+          "type": "breadcrumb",
+          "settings": {}
+        },
+        "custom_badges": {
+          "type": "custom_badges",
+          "settings": {}
+        },
+        "vendor_type": {
+          "type": "vendor_type",
+          "settings": {}
+        },
+        "title": {
+          "type": "title",
+          "settings": {}
+        },
+        "price": {
+          "type": "price",
+          "settings": {}
+        },
+        "variants": {
+          "type": "variants",
+          "settings": {}
+        },
+        "selling_plans": {
+          "type": "selling_plans",
+          "settings": {}
+        },
+        "button": {
+          "type": "button",
+          "settings": {}
+        },
+        "description": {
+          "type": "description",
+          "settings": {}
+        },
+        "enhanced_description": {
+          "type": "enhanced_description",
+          "settings": {}
+        },
+        "separator": {
+          "type": "separator",
+          "settings": {}
+        },
+        "share": {
+          "type": "share",
+          "settings": {}
+        }
+      },
+      "block_order": [
+        "breadcrumb",
+        "custom_badges",
+        "vendor_type",
+        "title",
+        "price",
+        "variants",
+        "selling_plans",
+        "button",
+        "description",
+        "enhanced_description",
+        "separator",
+        "share"
+      ],
+      "settings": {}
+    },
+    "product_enhanced_description": {
+      "type": "product_enhanced_description",
+      "blocks": {
+        "default_content": {
+          "type": "default_content",
+          "settings": {}
+        }
+      },
+      "block_order": [
+        "default_content"
+      ],
+      "disabled": true,
+      "settings": {}
+    },
+    "recommended_products": {
+      "type": "recommended_products",
+      "settings": {}
+    },
+    "recently_viewed": {
+      "type": "recently_viewed",
+      "settings": {}
+    }
+  },
+  "order": [
+    "product_main",
+    "product_enhanced_description",
+    "recommended_products",
+    "recently_viewed"
+  ]
+}

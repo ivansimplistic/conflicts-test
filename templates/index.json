@@ -1,0 +1,134 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "1641300092f51a1298": {
+      "type": "hero_carousel",
+      "blocks": {
+        "d27fec18-0f7d-43e7-be88-34162ed8be96": {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "Lorem ipsum",
+            "eyebrow_size": 3,
+            "title": "Lorem ipsum",
+            "is_h1": true,
+            "title_size": 1,
+            "text": "<p>Lorem ipsum dolor sit amet, consectur adipiscing elit. Nunc eu eros augue. Cras tempus finibus mi, at aliquet orci vestibulum sit amet.</p>",
+            "text_size": 3,
+            "button": "Button",
+            "link": "",
+            "cta_style": "btn",
+            "button2": "Button",
+            "link2": "",
+            "cta_style2": "btn v2",
+            "media_type": "image",
+            "video_iframe_desktop": "",
+            "media_type_mobile": "image",
+            "video_iframe_mobile": "",
+            "content_color_scheme_desktop": "",
+            "content_color_scheme_mobile": "",
+            "custom_background_desktop": "#999999",
+            "custom_background_mobile": "",
+            "tint_enable": true,
+            "tint_type": "box",
+            "tint_color": "#000000",
+            "tint_opacity": 20,
+            "tint_border_radius": 0,
+            "tint_blur": 24,
+            "text_width": 40,
+            "text_padding": 80,
+            "text_position_desktop": "justify-content-center align-items-center",
+            "text_align_desktop": "text-center",
+            "text_width_mobile": 30,
+            "text_padding_mobile": 100,
+            "text_position_mobile": "justify-content-center align-items-center",
+            "text_align_mobile": "text-center"
+          }
+        },
+        "33610ed9-3650-4414-9520-0b9fc07b6083": {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "Lorem ipsum",
+            "eyebrow_size": 3,
+            "title": "Lorem ipsum",
+            "is_h1": false,
+            "title_size": 1,
+            "text": "<p>Lorem ipsum dolor sit amet, consectur adipiscing elit. Nunc eu eros augue. Cras tempus finibus mi, at aliquet orci vestibulum sit amet.</p>",
+            "text_size": 3,
+            "button": "Button",
+            "link": "",
+            "cta_style": "btn",
+            "button2": "Button",
+            "link2": "",
+            "cta_style2": "btn v2",
+            "media_type": "image",
+            "video_iframe_desktop": "",
+            "media_type_mobile": "image",
+            "video_iframe_mobile": "",
+            "content_color_scheme_desktop": "",
+            "content_color_scheme_mobile": "",
+            "custom_background_desktop": "#999999",
+            "custom_background_mobile": "",
+            "tint_enable": true,
+            "tint_type": "box",
+            "tint_color": "#000000",
+            "tint_opacity": 20,
+            "tint_border_radius": 0,
+            "tint_blur": 24,
+            "text_width": 40,
+            "text_padding": 80,
+            "text_position_desktop": "justify-content-center align-items-center",
+            "text_align_desktop": "text-center",
+            "text_width_mobile": 30,
+            "text_padding_mobile": 100,
+            "text_position_mobile": "justify-content-center align-items-center",
+            "text_align_mobile": "text-center"
+          }
+        }
+      },
+      "block_order": [
+        "d27fec18-0f7d-43e7-be88-34162ed8be96",
+        "33610ed9-3650-4414-9520-0b9fc07b6083"
+      ],
+      "settings": {
+        "section_height": "medium",
+        "full_width": true,
+        "section_padding_top": 0,
+        "section_padding_bottom": 0,
+        "border_radius": 0,
+        "show_arrows": true,
+        "arrows_position": "sides",
+        "show_dots": true,
+        "dots_position": "inside",
+        "dots_align": "center",
+        "nav_color_desktop": "",
+        "layout_mobile": "above",
+        "section_height_mobile": "medium",
+        "full_width_mobile": true,
+        "section_padding_top_mobile": 0,
+        "section_padding_bottom_mobile": 0,
+        "border_radius_mobile": 0,
+        "show_dots_mobile": true,
+        "dots_position_mobile": "inside",
+        "dots_align_mobile": "center",
+        "nav_color_mobile": "",
+        "slides_per_view": "1",
+        "transition": "slide",
+        "autoplay": 8,
+        "automove": 0,
+        "pause_on_hover": false,
+        "section_color_scheme": ""
+      }
+    }
+  },
+  "order": [
+    "1641300092f51a1298"
+  ]
+}

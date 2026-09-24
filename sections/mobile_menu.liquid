@@ -1,0 +1,1517 @@
+{%- assign block = section.blocks.first -%}{%- comment -%}Workaround for Theme check UndefinedObject block in "visibile_if"{%- endcomment -%}
+
+{%- assign tabBlocks = section.blocks | where: 'type', 'tab' -%}
+{%- assign notTabBlocks = section.blocks | reject: 'type', 'tab' -%}
+{%- assign tabButtons = blank -%}
+{%- assign tabPanels = blank -%}
+{%- assign featuredCollections = blank -%}
+{%- assign featuredCollectionsFirstLevel = blank -%}
+
+{%- for tabBlock in tabBlocks -%}
+  {%- capture tabButtons -%}
+    {%- if tabBlock.settings.title != blank -%}
+      {{tabButtons}}
+      <button class="util-tab {{section.settings.tab_style}} text-center" type="button" role="tab" aria-selected="true" data-block="{{tabBlock.id}}" id="btn-block-{{tabBlock.id}}" aria-controls="content-block-{{tabBlock.id}}" {{ tabBlock.shopify_attributes }}>
+        {% if section.settings.tab_active_icon %}
+        <div class="hide icon-active">
+          <img alt="" class="lazyload" data-sizes="auto" src="{% render 'image_placeholder', image: section.settings.tab_active_icon %}" data-srcset="{% render 'lazy_src', image: section.settings.tab_active_icon %}" width="{{ section.settings.tab_active_icon.width }}" height="{{ section.settings.tab_active_icon.height }}" {% if section.settings.tab_active_icon.presentation.focal_point != blank %}style="object-position: {{section.settings.tab_active_icon.presentation.focal_point}};"{% endif %} />
+        </div>
+        {% endif %}
+        {{tabBlock.settings.title}}
+      </button>
+    {%- endif -%}
+  {%- endcapture -%}
+  {%- capture tabPanels -%}
+    {{tabPanels}}
+    {%- if tabBlocks.size > 1 -%}
+    <div tabindex="0" role="tabpanel" id="content-block-{{tabBlock.id}}" aria-labelledby="btn-block-{{tabBlock.id}}" {% if forloop.index > 1 %} hidden="hidden"{% endif %} {{ tabBlock.shopify_attributes }}>
+    {%- endif -%}
+      <div class="tab-content">
+        <div class="main-list {{section.settings.font_style}} borders-{{section.settings.borders}}">
+          {%- for first_link in linklists[tabBlock.settings.main_menu_mobile].links -%}
+            {%- if section.settings.mobile_menu_submenu_animation == 'slide' -%}
+              {%- assign submenuClass = 'slide ease-animation' -%}
+              {%- assign arrowIcon = 'chevron-right' -%}
+            {%- else -%}
+              {%- assign submenuClass = 'expandable' -%}
+              {%- assign arrowIcon = 'chevron-down' -%}
+            {%- endif -%}
+            {%- assign hasBlock = false -%}
+            {%- if notTabBlocks.size > 0 -%}
+              {%- capture blocksContent -%}
+                {%- for block in notTabBlocks -%}
+                  {%- assign customIcon = false -%}
+                  {%- if block.settings.parent_link == first_link.title -%}
+                    {%- if block.type == 'icon' -%}
+                      {%- assign customIcon = true -%}
+                      {%- render 'icons', icon: block.settings.icon -%}
+                      {%- break -%}
+                    {%- else -%}
+                      {%- assign hasBlock = true -%}
+                    {%- endif -%}
+                    {%- if block.type == 'featured_banner' -%}
+                      <div class="grid-item {{block.settings.width}} block-{{block.id}}">
+                        <style>#mobile-menu .block-{{block.id}} {--img-simple-border-radius: {{block.settings.image_border_radius}}em;}</style>
+                        {% render 'img_simple_overlay', imageLink: block.settings.image_link, image: block.settings.image, text: block.settings.image_text, textShadow: block.settings.image_text_shadow, colorScheme: block.settings.image_text_color, textPosition: block.settings.image_text_position, textAlign: block.settings.image_text_align, cta: block.settings.image_cta, ctaStyle: block.settings.image_cta_style %}
+                      </div>
+                    {%- endif -%}
+                    {%- if block.type == 'button' -%}
+                      <div class="grid-item {{block.settings.width}} block-{{block.id}} flex align-items-center">
+                        <a href="{{block.settings.button_link}}" class="{{block.settings.cta_style}} {% if block.settings.cta_style contains 'btn' %}{{section.settings.cta_size}}{% endif %}">{{block.settings.button}}</a>
+                      </div>
+                    {%- endif -%}
+
+                    {%- if block.type == 'featured_collections' -%}
+                      {%- capture itemsHtml -%}
+                        {%- for col in block.settings.collections -%}
+                        <div class="keen-slider-slide" {{block.shopify_attributes}}>
+                          {%- render 'collection_card', collection: col, block: block, cardSettings: block.settings -%}
+                        </div>
+                        {%- endfor -%}
+                      {%- endcapture -%}
+                      {%- capture featuredCollections -%}
+                        {{featuredCollections}}
+                        <div class="featured-collections block-{{block.id}} {% if block.settings.collection_custom_settings %}custom-settings{% endif %}">
+                          {%- render 'featured_collections_mobile_menu', block: block, cardType: 'collection', itemsHtml: itemsHtml -%}
+                        </div>
+                      {%- endcapture -%}
+                    {%- endif -%}
+
+                  {%- endif -%}
+                {%- endfor -%}
+              {%- endcapture -%}
+            {%- endif -%}
+            <div class="item{% if first_link.links != blank or hasBlock %} has-dropdown{% endif %}">
+              <div class="item-inner flex align-items-center justify-content-between">
+                {%- assign linkUrlLastChar = first_link.url | slice: -1 -%}
+                <a class="flex item-padding" href="{{ first_link.url }}" {% if linkUrlLastChar == '#' %}aria-hidden="true" role="button" tabindex="-1" data-notab="1" onclick="this.parentNode.querySelector('button').click(); return false;"{% endif %}>
+                  {%- assign titlePart = first_link.title | split: '**' -%}
+                  <div class="flex flex-wrap align-items-center">
+                    <span class="title">{{ titlePart[0] | strip }}</span> {%- if titlePart.size > 1 -%}<div class="badge">{{titlePart[1] | strip}}</div>{%- endif -%}
+                  </div>
+                </a>
+                {%- if first_link.links != blank or hasBlock -%}
+                  <button aria-expanded="false" aria-label="{{ 'mobile_menu.toggle_submenu_caption' | t: submenu_title: titlePart[0] | escape }}">{% render 'icons', icon: arrowIcon %}</button>
+                {%- elsif customIcon -%}
+                  {{blocksContent}}
+                {%- endif -%}
+              </div>
+              {%- if first_link.links != blank or hasBlock -%}
+                <div class="submenu {{submenuClass}} scheme color-{{section.settings.main_color_scheme}}">
+                  <div class="submenu-inner">
+                    {%- render 'mobile_menu_level', parent_link: first_link, submenuClass: submenuClass, arrowIcon: arrowIcon, section: section -%}
+                    {%- if hasBlock and blocksContent != blank-%}
+                      <div class="featured-banners">
+                        <div class="grid">
+                          {{blocksContent}}
+                        </div>
+                      </div>
+                    {%- endif -%}
+                    {%- if featuredCollections != blank -%}
+                      {{featuredCollections}}
+                      {%- assign featuredCollections = blank -%}
+                    {%- endif -%}
+                  </div>
+                </div>
+              {%- endif -%}
+            </div>
+          {%- endfor -%}
+
+          {%- comment -%}TAB LEVEL BLOCKS{%- endcomment -%}
+          {%- assign hasBlockFirstLevel = false -%}
+          {%- if notTabBlocks.size > 0 -%}
+            {%- capture blocksContentFirstLevel -%}
+              {%- for block in notTabBlocks -%}
+                {%- if block.settings.parent_link == tabBlock.settings.title -%}
+                  {%- assign hasBlockFirstLevel = true -%}
+                  {%- if block.type == 'featured_banner' -%}
+                    <div class="grid-item {{block.settings.width}} block-{{block.id}}">
+                      <style>#mobile-menu .block-{{block.id}} {--img-simple-border-radius: {{block.settings.image_border_radius}}em;}</style>
+                      {% render 'img_simple_overlay', imageLink: block.settings.image_link, image: block.settings.image, text: block.settings.image_text, textShadow: block.settings.image_text_shadow, colorScheme: block.settings.image_text_color, textPosition: block.settings.image_text_position, textAlign: block.settings.image_text_align, cta: block.settings.image_cta, ctaStyle: block.settings.image_cta_style %}
+                    </div>
+                  {%- endif -%}
+                  {%- if block.type == 'button' -%}
+                    <div class="grid-item {{block.settings.width}} block-{{block.id}} flex align-items-center">
+                      <a href="{{block.settings.button_link}}" class="{{block.settings.cta_style}} {% if block.settings.cta_style contains 'btn' %}{{section.settings.cta_size}}{% endif %}">{{block.settings.button}}</a>
+                    </div>
+                  {%- endif -%}
+                  {%- if block.type == 'featured_collections' -%}
+                    {%- capture itemsHtml -%}
+                      {%- for col in block.settings.collections -%}
+                      <div class="keen-slider-slide" {{block.shopify_attributes}}>
+                        {%- render 'collection_card', collection: col, block: block, cardSettings: block.settings -%}
+                      </div>
+                      {%- endfor -%}
+                    {%- endcapture -%}
+                    {%- capture featuredCollectionsFirstLevel -%}
+                      {{featuredCollectionsFirstLevel}}
+                      <div class="featured-collections block-{{block.id}} {% if block.settings.collection_custom_settings %}custom-settings{% endif %}">
+                        {%- render 'featured_collections_mobile_menu', block: block, cardType: 'collection', itemsHtml: itemsHtml -%}
+                      </div>
+                    {%- endcapture -%}
+                  {%- endif -%}
+
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endcapture -%}
+          {%- endif -%}
+          {%- if hasBlockFirstLevel -%}
+            {%- if blocksContentFirstLevel != blank-%}
+              <div class="featured-banners">
+                <div class="grid">
+                  {{blocksContentFirstLevel}}
+                </div>
+              </div>
+            {%- endif -%}
+            {%- if featuredCollectionsFirstLevel != blank -%}
+              {{featuredCollectionsFirstLevel}}
+              {%- assign featuredCollectionsFirstLevel = blank -%}
+            {%- endif -%}
+          {%- endif -%}
+        </div>
+
+        <div class="secondary-list">
+          {%- for first_link in linklists[tabBlock.settings.secondary_menu_mobile].links -%}
+            <div class="item{% if first_link.links != blank or hasBlock %} has-dropdown{% endif %}">
+              <div class="item-inner flex align-items-center justify-content-between">
+                {%- assign linkUrlLastChar = first_link.url | slice: -1 -%}
+                <a class="flex item-padding" href="{{ first_link.url }}" {% if linkUrlLastChar == '#' %}aria-hidden="true" role="button" tabindex="-1" data-notab="1" onclick="this.parentNode.querySelector('button').click(); return false;"{% endif %}>
+                  {%- assign titlePart = first_link.title | split: '**' -%}
+                  <div class="flex flex-wrap align-items-center">
+                    <span>{{ titlePart[0] | strip }}</span> {%- if titlePart.size > 1 -%}<div class="badge">{{titlePart[1] | strip}}</div>{%- endif -%}
+                  </div>
+                </a>
+                {%- if first_link.links != blank or hasBlock -%}
+                  <button aria-expanded="false" aria-label="{{ 'mobile_menu.toggle_submenu_caption' | t: submenu_title: titlePart[0] | escape }}">{% render 'icons', icon: arrowIcon %}</button>
+                {%- endif -%}
+              </div>
+              {%- if first_link.links != blank or hasBlock -%}
+                <div class="submenu {{submenuClass}} scheme color-{{section.settings.main_color_scheme}}">
+                  <div class="submenu-inner">
+                    {%- render 'mobile_menu_level', parent_link: first_link, submenuClass: submenuClass, arrowIcon: arrowIcon, section: section -%}
+                    {%- if hasBlock and blocksContent != blank -%}
+                      <div class="featured-banners">
+                        <div class="grid">
+                          {{blocksContent}}
+                        </div>
+                      </div>
+                    {%- endif -%}
+                    {%- if featuredCollections != blank -%}
+                      {{featuredCollections}}
+                      {%- assign featuredCollections = blank -%}
+                    {%- endif -%}
+                  </div>
+                </div>
+              {%- endif -%}
+            </div>
+          {%- endfor -%}
+        </div>
+      </div>
+    {%- if tabBlocks.size > 1 -%}
+    </div>
+    {%- endif -%}
+  {%- endcapture -%}
+{%- endfor -%}
+
+{%- capture tabsHtml -%}
+  {%- if tabBlocks.size > 1 -%}
+  <util-tabs data-match-height="false">
+    <div class="tabs-outer {% if section.settings.sticky_tabs %}sticky{% endif %} {% if section.settings.tabs_show_scroll_hint %}scrollable-overlay{% endif %} content-{{section.settings.tabs_width}} tabs-style-{{section.settings.tab_style}} {% if section.settings.tabs_full_width %}tabs-full-width{% endif %} {% if section.settings.tabs_bordered %}tabs-bordered{% endif %} scheme color-{{section.settings.tabs_color_scheme}} {% if section.settings.tabs_border_bottom %}scheme-border-bottom{% endif %}" {% unless tabBlocks.size > 1 %}style="display:none;"{% endunless %}>
+      <div class="tabs-inner flex">
+        <div class="tabs-wrap flex flex-wrap" role="tablist" aria-label="{{section.settings.tabs_title}}">
+          {{tabButtons}}
+        </div>
+      </div>
+    </div>
+    {{tabPanels}}
+  </util-tabs>
+  <script src="{{ 'util_tabs.js' | asset_url }}" defer="defer"></script>
+  {%- else -%}
+    {{tabPanels}}
+  {%- endif -%}
+{%- endcapture -%}
+
+<style type="text/css">
+  #mobile-menu {
+    --font-size: {{section.settings.font_size}}%;
+    --font-weight: {{section.settings.font_weight}};
+    --text-transform: {{section.settings.text_transform}};
+    --letter-spacing: {{section.settings.letter_spacing | divided_by: 10.00}}em;
+    --tab-border-radius: {{section.settings.tab_border_radius}}em;
+    --tab-margin: {{section.settings.tab_margin}}em;
+    --tabs-content-padding: {{section.settings.content_padding}}em;
+    --tab-vertical-padding: {{section.settings.tab_vertical_padding}}em;
+    --tab-horizontal-padding: {{section.settings.tab_horizontal_padding}}em;
+    --tab-icon-active-size: {{section.settings.tab_active_icon_width}}em;
+  }
+</style>
+{{ 'mobile_menu.css' | asset_url | stylesheet_tag }}
+
+<mobile-menu id="mobile-menu" class="ease-animation from-{{section.settings.mobile_menu_position}} slide-in-modal" {% if section.settings.top_position == 'below-header' %} data-top-position="{{section.settings.top_position}}"{% endif %} role="dialog" aria-modal="true">
+  <div class="wrapper flex direction-column">
+    <div class="head scheme color-{{section.settings.heading_color_scheme}} {% if section.settings.heading_border %}scheme-border-bottom{% endif %}">
+      <div class="title">{{ 'mobile_menu.title' | t }}</div>
+      <button class="close" aria-label="{{ 'mobile_menu.close_caption' | t | escape }}">
+        {% render 'icons', icon: 'close' %}
+      </button>
+    </div>
+    <div class="content scheme color-{{section.settings.main_color_scheme}} flex direction-column flex-1">
+      <nav class="menu-links flex-1 flex direction-column" role="navigation">
+        {%- if section.settings.show_search -%}
+          <div class="extras top scheme color-{{section.settings.extras_color_scheme}} {% if section.settings.extras_border %}scheme-border-bottom{% endif %}">
+            <div class="item search">
+              <div class="item-inner">
+                <div class="item-padding">
+                  {%- render 'search_form', color_scheme: section.settings.main_color_scheme -%}
+                </div>
+              </div>
+            </div>
+          </div>
+        {%- endif -%}
+        <div class="middle-content flex-1">
+          {%- comment -%}TABS + PANELS{%- endcomment -%}
+          {{tabsHtml}}
+
+          {%- assign hasBlock = false -%}
+          {%- assign featuredCollections = blank -%}
+          {%- if notTabBlocks.size > 0 -%}
+            {%- capture blocksContent -%}
+              {%- for block in notTabBlocks -%}
+                {%- if block.settings.parent_link == blank or block.settings.parent_link == '' -%}
+                  {%- assign hasBlock = true -%}
+                  {%- if block.type == 'featured_banner' -%}
+                    <div class="grid-item {{block.settings.width}} block-{{block.id}}">
+                      <style>#mobile-menu .block-{{block.id}} {--img-simple-border-radius: {{block.settings.image_border_radius}}em;}</style>
+                      {% render 'img_simple_overlay', imageLink: block.settings.image_link, image: block.settings.image, text: block.settings.image_text, textShadow: block.settings.image_text_shadow, textPosition: block.settings.image_text_position, textAlign: block.settings.image_text_align, cta: block.settings.image_cta, ctaStyle: block.settings.image_cta_style %}
+                    </div>
+                  {%- elsif block.type == 'button' -%}
+                    <div class="grid-item {{block.settings.width}} block-{{block.id}} flex align-items-center">
+                      <a href="{{block.settings.button_link}}" class="{{block.settings.cta_style}} {% if block.settings.cta_style contains 'btn' %}{{section.settings.cta_size}}{% endif %}">{{block.settings.button}}</a>
+                    </div>
+                  {%- elsif block.type == 'featured_collections' -%}
+                    {%- capture itemsHtml -%}
+                      {%- for col in block.settings.collections -%}
+                      <div class="keen-slider-slide" {{block.shopify_attributes}}>
+                        {%- render 'collection_card', collection: col, block: block, cardSettings: block.settings -%}
+                      </div>
+                      {%- endfor -%}
+                    {%- endcapture -%}
+                    {%- capture featuredCollections -%}
+                      {{featuredCollections}}
+                      <div class="featured-collections featured-collections-first-level block-{{block.id}} {% if block.settings.collection_custom_settings %}custom-settings{% endif %}">
+                        {%- render 'featured_collections_mobile_menu', block: block, cardType: 'collection', itemsHtml: itemsHtml -%}
+                      </div>
+                    {%- endcapture -%}
+                  {%- endif -%}
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endcapture -%}
+            {%- if hasBlock -%}
+              {%- if blocksContent != blank -%}
+              <div class="featured-banners">
+                <div class="grid">
+                  {{blocksContent}}
+                </div>
+              </div>
+              {%- endif -%}
+              {%- if featuredCollections != blank -%}
+                {{featuredCollections}}
+              {%- endif -%}
+            {%- endif -%}
+          {%- endif -%}
+
+        </div>
+        <div class="extras bottom scheme color-{{section.settings.extras_color_scheme}} {% if section.settings.extras_border %}scheme-border-top{% endif %}">
+          {%- if section.settings.show_login -%}
+            <div class="item">
+              <div class="item-inner">
+                <a class="item-padding flex align-items-center" {% if customer %}href="/account"{% else %}href="/account/login"{% endif %}>
+                  {%- render 'icons', icon: 'user' -%}
+                  {%- if customer -%}
+                    <span>{{ 'mobile_menu.my_account_link' | t }}</span>
+                  {%- else -%}
+                    <span>{{ 'mobile_menu.login_link' | t }}</span>
+                  {%- endif -%}
+                </a>
+              </div>
+            </div>
+          {%- endif -%}
+          {%- if settings.show_currency_selector_header -%}
+            <div class="item">
+              <div class="item-inner">
+                <div class="item-padding flex align-items-center">
+                  {%- render 'currency_selector' -%}
+                </div>
+              </div>
+            </div>
+          {%- endif -%}
+          {%- if settings.show_language_selector_header -%}
+            <div class="item">
+              <div class="item-inner">
+                <div class="item-padding flex align-items-center">
+                  {%- render 'language_selector' -%}
+                  <span>{{ 'mobile_menu.language_label' | t}}</span>
+                </div>
+              </div>
+            </div>
+          {%- endif -%}
+          {%- if section.settings.show_social_links -%}
+            <div class="item">
+              <div class="item-inner">
+                <div class="item-padding flex align-items-center">
+                  {%- render 'social_links' -%}
+                </div>
+              </div>
+            </div>
+          {%- endif -%}
+        </div>
+      </nav>
+    </div>
+  </div>
+</mobile-menu>
+
+<script src="{{ 'mobile_menu.js' | asset_url }}" defer="defer"></script>
+{% if request.design_mode %}
+<script type="module">
+  var section = document.getElementById('shopify-section-{{section.id}}');
+  section.addEventListener('shopify:section:select', (e)=>{
+    section.querySelector('mobile-menu').open();
+  });
+  section.addEventListener('shopify:section:deselect', (e)=>{
+    section.querySelector('mobile-menu').close();
+  });
+  section.addEventListener('shopify:block:select', (e)=>{
+    if(e.target.classList.contains('util-tab')){
+      e.target.closest('util-tabs').activateTab(e.target);
+    }
+  });
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Menu Mobile",
+  "class": "type-menu-mobile",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "radio",
+      "id": "mobile_menu_position",
+      "label": "Open style",
+      "options": [
+        {
+          "value": "left",
+          "label": "Slides in from the left"
+        },
+        {
+          "value": "right",
+          "label": "Slides in from the right"
+        },
+        {
+          "value": "fade",
+          "label": "Fades in"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "radio",
+      "id": "top_position",
+      "label": "Starting position",
+      "options": [
+        {
+          "value": "page",
+          "label": "Beginning of page"
+        },
+        {
+          "value": "below-header",
+          "label": "Under header"
+        }
+      ],
+      "default": "page"
+    },
+    {
+      "type": "select",
+      "id": "mobile_menu_submenu_animation",
+      "label": "Submenu open mode",
+      "options": [
+        {
+          "value": "slide",
+          "label": "Slide-in"
+        },
+        {
+          "value": "dropdown",
+          "label": "Drop-down"
+        }
+      ],
+      "default": "slide"
+    },
+    {
+      "type": "select",
+      "id": "borders",
+      "label": "Border between links",
+      "options": [
+        {
+          "value": "false",
+          "label": "No"
+        },
+        {
+          "value": "main",
+          "label": "Main links"
+        },
+        {
+          "value": "true",
+          "label": "All links"
+        }
+      ],
+      "default": "true"
+    },
+    {
+      "type": "color_scheme",
+      "id": "main_color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Header"
+    },
+    {
+      "type": "color_scheme",
+      "id": "heading_color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-3"
+    },
+    {
+      "type": "checkbox",
+      "id": "heading_border",
+      "label": "Border bottom"
+    },
+    {
+      "type": "header",
+      "content": "Tabs style"
+    },
+    {
+      "type": "color_scheme",
+      "id": "tabs_color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "select",
+      "id": "tabs_width",
+      "label": "Width",
+      "options": [
+        {
+          "value": "full",
+          "label": "Full"
+        },
+        {
+          "value": "container",
+          "label": "Container"
+        },
+        {
+          "value": "container-left",
+          "label": "Left container"
+        }
+      ],
+      "default": "container"
+    },
+    {
+      "type": "checkbox",
+      "id": "tabs_border_bottom",
+      "label": "Border bottom",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "content_padding",
+      "min": 0,
+      "max": 2,
+      "step": 0.1,
+      "unit": "em",
+      "label": "Content padding",
+      "default": 0.5
+    },
+    {
+      "type": "checkbox",
+      "id": "sticky_tabs",
+      "label": "Sticky tabs",
+      "default": true,
+      "info": "Tabs will stick to the top of the screen when scrolling."
+    },
+    {
+      "type": "checkbox",
+      "id": "tabs_show_scroll_hint",
+      "label": "Show scroll hint",
+      "default": true,
+      "info": "Displays a subtle shadow on the sides to indicate more items are available when the bar overflows horizontally."
+    },
+    {
+      "type": "paragraph",
+      "content": "****************************************** Tabs settings ******************************************"
+    },
+    {
+      "type": "range",
+      "id": "tab_vertical_padding",
+      "min": 0,
+      "max": 2,
+      "step": 0.1,
+      "unit": "em",
+      "label": "Tab vertical padding",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "tab_horizontal_padding",
+      "min": 0,
+      "max": 2,
+      "step": 0.1,
+      "unit": "em",
+      "label": "Tab horizontal padding",
+      "default": 0
+    },
+    {
+      "type": "select",
+      "id": "tab_style",
+      "label": "Style",
+      "options": [
+        {
+          "value": "v1",
+          "label": "Pills"
+        },
+        {
+          "value": "v2",
+          "label": "Line"
+        },
+        {
+          "value": "plain-text",
+          "label": "Plain text"
+        }
+      ],
+      "default": "plain-text"
+    },
+    {
+      "type": "checkbox",
+      "id": "tabs_full_width",
+      "label": "Stretch buttons",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "tabs_bordered",
+      "label": "Separate buttons with borders",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "tab_border_radius",
+      "min": 0,
+      "max": 2,
+      "step": 0.1,
+      "unit": "em",
+      "label": "Border radius",
+      "default": 0
+    },
+    {
+      "visible_if": "{{ section.settings.tab_style != 'table-row' }}",
+      "type": "range",
+      "id": "tab_margin",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "unit": "em",
+      "label": "Margin",
+      "default": 0
+    },
+    {
+      "type": "paragraph",
+      "content": "****************************************** Active state settings ******************************************"
+    },
+    {
+      "type": "checkbox",
+      "id": "tab_active_icon_enable",
+      "label": "Use icon",
+      "default": false
+    },
+    {
+      "visible_if": "{{ section.settings.tab_active_icon_enable }}",
+      "type": "image_picker",
+      "id": "tab_active_icon",
+      "label": "Active icon"
+    },
+    {
+      "visible_if": "{{ section.settings.tab_active_icon_enable }}",
+      "type": "range",
+      "id": "tab_active_icon_width",
+      "min": 0,
+      "max": 2,
+      "step": 0.1,
+      "unit": "em",
+      "label": "Icon width",
+      "default": 1
+    },
+    {
+      "type": "header",
+      "content": "Main links style"
+    },
+    {
+      "type": "select",
+      "id": "font_style",
+      "label": "Font family",
+      "options": [
+        {
+          "value": "body-font",
+          "label": "Body"
+        },
+        {
+          "value": "heading-font",
+          "label": "Headings"
+        }
+      ],
+      "default": "body-font"
+    },
+    {
+      "type": "range",
+      "id": "font_weight",
+      "min": 100,
+      "max": 900,
+      "step": 100,
+      "unit": "%",
+      "label": "Font weight",
+      "default": 400
+    },
+    {
+      "type": "select",
+      "id": "text_transform",
+      "label": "Capitalization",
+      "options": [
+        {
+          "value": "none",
+          "label": "Natural"
+        },
+        {
+          "value": "uppercase",
+          "label": "Uppercase"
+        }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "min": 80,
+      "max": 250,
+      "step": 2,
+      "unit": "%",
+      "label": "Font size",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "letter_spacing",
+      "min": -0.5,
+      "max": 2,
+      "step": 0.1,
+      "unit": "em",
+      "label": "Letter spacing",
+      "default": 0,
+      "info": "This value will be divided by 10, so 0.5 is 0.05em."
+    },
+    {
+      "type": "header",
+      "content": "Extras"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_search",
+      "label": "Search bar (top)",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_login",
+      "label": "Login/account (bottom)",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_social_links",
+      "label": "Social links (bottom)",
+      "default": true
+    },
+    {
+      "type": "color_scheme",
+      "id": "extras_color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-2"
+    },
+    {
+      "type": "checkbox",
+      "id": "extras_border",
+      "label": "Border",
+      "default": true
+    }
+  ],
+  "blocks": [
+    {
+      "type": "tab",
+      "name": "Menu tab",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Tab title",
+          "default": "Tab title"
+        },
+        {
+          "type": "link_list",
+          "id": "main_menu_mobile",
+          "label": "Menu"
+        },
+        {
+          "type": "link_list",
+          "id": "secondary_menu_mobile",
+          "label": "Secondary menu"
+        }
+      ]
+    },
+    {
+      "type": "icon",
+      "name": "Icon",
+      "settings": [
+        {
+          "type": "text",
+          "id": "parent_link",
+          "label": "Parent link title",
+          "info": "Write the name of the parent link that this icon belongs to."
+        },
+        {
+          "type": "select",
+          "id": "icon",
+          "label": "Icon",
+          "options": [
+            {
+              "value": "none",
+              "label": "None"
+            },
+            {
+              "value": "arrow-left",
+              "label": "Arrow left"
+            },
+            {
+              "value": "arrow-right",
+              "label": "Arrow right"
+            },
+            {
+              "value": "chevron-left",
+              "label": "Chevron left"
+            },
+            {
+              "value": "chevron-right",
+              "label": "Chevron right"
+            },
+            {
+              "value": "bag",
+              "label": "Bag"
+            },
+            {
+              "value": "bell",
+              "label": "Bell"
+            },
+            {
+              "value": "bubble",
+              "label": "Bubble"
+            },
+            {
+              "value": "calendar",
+              "label": "Calendar"
+            },
+            {
+              "value": "cart",
+              "label": "Cart"
+            },
+            {
+              "value": "carrot",
+              "label": "Carrot"
+            },
+            {
+              "value": "checkmark",
+              "label": "Checkmark"
+            },
+            {
+              "value": "clock",
+              "label": "Clock"
+            },
+            {
+              "value": "close",
+              "label": "Cross"
+            },
+            {
+              "value": "eye",
+              "label": "Eye"
+            },
+            {
+              "value": "filters",
+              "label": "Filters"
+            },
+            {
+              "value": "fullscreen",
+              "label": "Fullscreen"
+            },
+            {
+              "value": "gift",
+              "label": "Gift"
+            },
+            {
+              "value": "hamburger",
+              "label": "Menu"
+            },
+            {
+              "value": "hand",
+              "label": "Hand"
+            },
+            {
+              "value": "heart",
+              "label": "Heart"
+            },
+            {
+              "value": "help",
+              "label": "Help"
+            },
+            {
+              "value": "email",
+              "label": "Envelope"
+            },
+            {
+              "value": "map",
+              "label": "Map pointer"
+            },
+            {
+              "value": "minus",
+              "label": "Minus"
+            },
+            {
+              "value": "plus",
+              "label": "Plus"
+            },
+            {
+              "value": "tag",
+              "label": "Product tag"
+            },
+            {
+              "value": "edit",
+              "label": "Pencil"
+            },
+            {
+              "value": "edit-paper",
+              "label": "Edit paper"
+            },
+            {
+              "value": "piggybank",
+              "label": "Piggybank"
+            },
+            {
+              "value": "play",
+              "label": "Play"
+            },
+            {
+              "value": "pause",
+              "label": "Pause"
+            },
+            {
+              "value": "search",
+              "label": "Search"
+            },
+            {
+              "value": "share",
+              "label": "Share"
+            },
+            {
+              "value": "shipping",
+              "label": "Shipping truck"
+            },
+            {
+              "value": "shipping-fast",
+              "label": "Shipping truck - fast"
+            },
+            {
+              "value": "star",
+              "label": "Star"
+            },
+            {
+              "value": "store",
+              "label": "Store"
+            },
+            {
+              "value": "delete",
+              "label": "Trash"
+            },
+            {
+              "value": "user",
+              "label": "User"
+            },
+            {
+              "value": "zoom",
+              "label": "Zoom"
+            }
+          ],
+          "default": "heart"
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "name": "Button",
+      "settings": [
+        {
+          "type": "text",
+          "id": "parent_link",
+          "label": "Parent link title",
+          "info": "Write the name of the parent link or tab where this button should be placed. If the parent link has a submenu, the button will be placed inside, under all the child links. If the parent link doesn't have a submenu, one will be generated with this button inside. Leave blank to display it on the first level of the mobile menu."
+        },
+        {
+          "type": "select",
+          "id": "width",
+          "label": "Width",
+          "options": [
+            {
+              "value": "one-third",
+              "label": "33%"
+            },
+            {
+              "value": "one-half",
+              "label": "50%"
+            },
+            {
+              "value": "one-whole",
+              "label": "100%"
+            }
+          ],
+          "default": "one-whole"
+        },
+        {
+          "type": "text",
+          "id": "button",
+          "label": "Button"
+        },
+        {
+          "visible_if": "{{ block.settings.button != blank }}",
+          "type": "url",
+          "id": "button_link",
+          "label": "Button URL"
+        },
+        {
+          "visible_if": "{{ block.settings.button != blank }}",
+          "type": "select",
+          "id": "cta_style",
+          "label": "Button style",
+          "options": [
+            {
+              "value": "link",
+              "label": "Link"
+            },
+            {
+              "value": "btn",
+              "label": "Button"
+            },
+            {
+              "value": "btn v2",
+              "label": "Button V2"
+            }
+          ],
+          "default": "btn v2"
+        },
+        {
+          "visible_if": "{{ block.settings.button != blank }}",
+          "type": "select",
+          "id": "cta_size",
+          "label": "Button size",
+          "options": [
+            {
+              "value": "smaller",
+              "label": "Smaller"
+            },
+            {
+              "value": "normal",
+              "label": "Normal"
+            },
+            {
+              "value": "larger",
+              "label": "Larger"
+            }
+          ],
+          "default": "normal"
+        }
+      ]
+    },
+    {
+      "type": "featured_banner",
+      "name": "Banner",
+      "settings": [
+        {
+          "type": "text",
+          "id": "parent_link",
+          "label": "Parent link title",
+          "info": "Write the name of the parent link or tab where this banner should be placed. If the parent link has a submenu, the banner will be placed inside, below all the child links. If the parent link doesn't have a submenu, one will be generated with this banner inside. Leave blank to display it on the first level of the mobile menu."
+        },
+        {
+          "type": "select",
+          "id": "width",
+          "label": "Width",
+          "options": [
+            {
+              "value": "one-third",
+              "label": "33%"
+            },
+            {
+              "value": "one-half",
+              "label": "50%"
+            },
+            {
+              "value": "one-whole",
+              "label": "100%"
+            }
+          ],
+          "default": "one-half"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "visible_if": "{{ block.settings.image != blank }}",
+          "type": "url",
+          "id": "image_link",
+          "label": "Image link"
+        },
+        {
+          "visible_if": "{{ block.settings.image != blank }}",
+          "type": "richtext",
+          "id": "image_text",
+          "label": "Image caption",
+          "default": "<p><em>Eyebrow</em></p><p><strong>Title here</strong></p><p>This is a text lorem ipsum.</p>",
+          "info": "Use italic for the eyebrow and bold for the title."
+        },
+        {
+          "visible_if": "{{ block.settings.image != blank }}",
+          "type": "color_scheme",
+          "id": "image_text_color",
+          "label": "Image caption color",
+          "default": "scheme-1"
+        },
+        {
+          "visible_if": "{{ block.settings.image != blank }}",
+          "type": "text",
+          "id": "image_cta",
+          "label": "Image caption CTA"
+        },
+        {
+          "visible_if": "{{ block.settings.image != blank }}",
+          "type": "select",
+          "id": "image_cta_style",
+          "label": "Imagee caption CTA style",
+          "options": [
+            {
+              "value": "link",
+              "label": "Link"
+            },
+            {
+              "value": "btn",
+              "label": "Button"
+            },
+            {
+              "value": "btn v2",
+              "label": "Button V2"
+            }
+          ],
+          "default": "btn"
+        },
+        {
+          "visible_if": "{{ block.settings.image != blank }}",
+          "type": "select",
+          "id": "image_text_position",
+          "label": "Caption position",
+          "options": [
+            {
+              "value": "inside",
+              "label": "Inside"
+            },
+            {
+              "value": "outside",
+              "label": "Outside"
+            }
+          ],
+          "default": "inside"
+        },
+        {
+          "visible_if": "{{ block.settings.image != blank }}",
+          "type": "select",
+          "id": "image_text_align",
+          "label": "Caption align",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ],
+          "default": "center"
+        },
+        {
+          "visible_if": "{{ block.settings.image != blank }}",
+          "type": "checkbox",
+          "id": "image_text_shadow",
+          "label": "Shadow behind caption"
+        }
+      ]
+    },
+    {
+      "type": "featured_collections",
+      "name": "Featured collections",
+      "settings": [
+        {
+          "type": "text",
+          "id": "parent_link",
+          "label": "Parent link title",
+          "info": "Write the name of the parent link or tab where this carousel should be placed. If the parent link has a submenu, the carousel will be placed inside, below all the child links. If the parent link doesn't have a submenu, one will be generated with this carousel inside. Leave blank to display it on the first level of the mobile menu."
+        },
+        {
+          "type": "header",
+          "content": "Content"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+        },
+        {
+          "visible_if": "{{ block.settings.title != blank }}",
+          "type": "range",
+          "id": "title_size",
+          "min": -1,
+          "max": 6,
+          "step": 1,
+          "unit": "h",
+          "label": "Title size",
+          "default": 3,
+          "info": "Equivalent to the heading tags."
+        },
+        {
+          "visible_if": "{{ block.settings.title != blank }}",
+          "type": "select",
+          "id": "title_font_style",
+          "label": "Title font family",
+          "options": [
+            {
+              "value": "body-font",
+              "label": "Body"
+            },
+            {
+              "value": "heading-font",
+              "label": "Headings"
+            }
+          ],
+          "default": "body-font"
+        },
+        {
+          "type": "collection_list",
+          "id": "collections",
+          "label": "Collections",
+          "limit": 8
+        },
+        {
+          "type": "header",
+          "content": "Layout"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_dots",
+          "label": "Show dots",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_arrows",
+          "label": "Show arrows",
+          "default": true
+        },
+        {
+          "type": "range",
+          "id": "carousel_autoplay",
+          "min": 0,
+          "max": 10,
+          "step": 1,
+          "unit": "s",
+          "label": "Autoplay interval",
+          "default": 0,
+          "info": "0 = off"
+        },
+        {
+          "type": "header",
+          "content": "Items per view"
+        },
+        {
+          "type": "paragraph",
+          "content": "Indicates the items per slider page (allows decimals)."
+        },
+        {
+          "type": "range",
+          "id": "items_per_view_tablet",
+          "min": 0,
+          "max": 6,
+          "step": 0.1,
+          "unit": "un",
+          "label": "Items per view (Tablet)",
+          "default": 2.4
+        },
+        {
+          "type": "range",
+          "id": "items_per_view_mobile",
+          "min": 0,
+          "max": 5,
+          "step": 0.1,
+          "unit": "un",
+          "label": "Items per view (Mobile)",
+          "default": 1.4
+        },
+        {
+          "type": "header",
+          "content": "Section settings"
+        },
+        {
+          "type": "checkbox",
+          "id": "full_width",
+          "label": "Full width",
+          "default": true
+        },
+        {
+          "type": "range",
+          "id": "items_spacing",
+          "min": 0,
+          "max": 500,
+          "step": 50,
+          "unit": "%",
+          "label": "Items spacing",
+          "default": 100
+        },
+        {
+          "type": "select",
+          "id": "text_align",
+          "label": "Text align (title, text, button, dots)",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ],
+          "default": "left"
+        },
+        {
+          "type": "color_scheme",
+          "id": "content_color_scheme",
+          "label": "Content color scheme",
+          "default": "scheme-1"
+        },
+        {
+          "type": "color_scheme",
+          "id": "cards_color_scheme",
+          "label": "Cards color scheme",
+          "default": "scheme-1"
+        },
+        {
+          "type": "header",
+          "content": "Cards custom settings"
+        },
+        {
+          "type": "checkbox",
+          "id": "collection_custom_settings",
+          "label": "Enable collection cards custom settings?",
+          "default": false
+        },
+        {
+          "visible_if": "{{ block.settings.collection_custom_settings }}",
+          "type": "header",
+          "content": "Cards - General"
+        },
+        {
+          "visible_if": "{{ block.settings.collection_custom_settings }}",
+          "type": "checkbox",
+          "id": "collection_show_quantity",
+          "label": "Show quantity of products",
+          "default": true
+        },
+        {
+          "visible_if": "{{ block.settings.collection_custom_settings }}",
+          "type": "checkbox",
+          "id": "collection_show_arrow",
+          "label": "Show arrow",
+          "default": true
+        },
+        {
+          "visible_if": "{{ block.settings.collection_custom_settings }}",
+          "type": "select",
+          "id": "collection_card_text_align",
+          "label": "Text align",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ],
+          "default": "left"
+        },
+        {
+          "visible_if": "{{ block.settings.collection_custom_settings }}",
+          "type": "radio",
+          "id": "collection_card_text_layout",
+          "label": "Info position",
+          "options": [
+            {
+              "value": "bottom",
+              "label": "Bottom"
+            },
+            {
+              "value": "absolute bottom",
+              "label": "Absolute bottom"
+            },
+            {
+              "value": "absolute full",
+              "label": "Absolute full"
+            }
+          ],
+          "default": "absolute bottom"
+        },
+        {
+          "visible_if": "{{ settings.collection_card_text_layout != 'bottom' and block.settings.collection_custom_settings }}",
+          "type": "range",
+          "id": "collection_card_overlay_opacity",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%",
+          "label": "Overlay opacity",
+          "default": 80
+        },
+        {
+          "visible_if": "{{ block.settings.collection_custom_settings }}",
+          "type": "header",
+          "content": "Cards - Image"
+        },
+        {
+          "visible_if": "{{ block.settings.collection_custom_settings }}",
+          "type": "range",
+          "id": "collection_card_img_height",
+          "min": 50,
+          "max": 150,
+          "step": 1,
+          "unit": "%",
+          "label": "Image height",
+          "default": 70
+        },
+        {
+          "visible_if": "{{ block.settings.collection_custom_settings }}",
+          "type": "checkbox",
+          "id": "collection_card_image_full_width",
+          "label": "Image full width"
+        },
+        {
+          "visible_if": "{{ block.settings.collection_custom_settings }}",
+          "type": "range",
+          "id": "collection_card_border_radius",
+          "min": 0,
+          "max": 3,
+          "step": 0.2,
+          "unit": "em",
+          "label": "Image/card border radius",
+          "default": 0
+        },
+        {
+          "visible_if": "{{ block.settings.collection_custom_settings }}",
+          "type": "checkbox",
+          "id": "collection_card_border",
+          "label": "Image/card border",
+          "default": false
+        },
+        {
+          "visible_if": "{{ block.settings.collection_custom_settings }}",
+          "type": "header",
+          "content": "Cards - Title"
+        },
+        {
+          "visible_if": "{{ block.settings.collection_custom_settings }}",
+          "type": "select",
+          "id": "collection_card_title_font_family",
+          "label": "Title font style",
+          "options": [
+            {
+              "value": "body-font",
+              "label": "Match body"
+            },
+            {
+              "value": "heading-font",
+              "label": "Match headings"
+            }
+          ],
+          "default": "heading-font"
+        },
+        {
+          "visible_if": "{{ block.settings.collection_custom_settings }}",
+          "type": "range",
+          "id": "collection_card_title_size",
+          "min": 1,
+          "max": 2,
+          "step": 0.1,
+          "unit": "em",
+          "label": "Title size",
+          "default": 1.1
+        },
+        {
+          "visible_if": "{{ block.settings.collection_custom_settings }}",
+          "type": "range",
+          "id": "collection_card_title_weight",
+          "min": 100,
+          "max": 900,
+          "step": 100,
+          "unit": "%",
+          "label": "Title weight",
+          "default": 700
+        },
+        {
+          "visible_if": "{{ block.settings.collection_custom_settings }}",
+          "type": "checkbox",
+          "id": "collection_match_title_height",
+          "label": "Match title height in carousels"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,444 @@
+{%- liquid
+  assign pageScope = section.settings.page_scope
+  assign renderSection = false
+  if pageScope == 'all'
+    assign renderSection = true
+  elsif pageScope == 'core'
+    if template.name == 'index' or template.name == 'collection' or template.name == 'product'
+      assign renderSection = true
+    endif
+  elsif pageScope == 'homepage'
+    if template.name == 'index'
+      assign renderSection = true
+    endif
+  endif
+-%}
+
+{%- if renderSection -%}
+  {%- liquid
+    assign disableLazyLoading = false
+    if section.location == 'header' or section.index == 1 and section.location == 'template'
+      assign disableLazyLoading = true
+    endif
+    assign separatorImage = section.settings.separator_image
+    assign separatorText = section.settings.separator_text
+    assign hasSeparator = false
+    if separatorImage != blank or separatorText != blank
+      assign hasSeparator = true
+    endif
+    assign itemBorderRadius = section.settings.item_border_radius
+    assign itemImageSize = section.settings.item_image_size
+    assign itemImagePosition = section.settings.item_image_position
+    assign itemFontStyle = section.settings.item_font_style
+    assign itemTextSize = section.settings.item_text_size | prepend: 'p'
+    assign separatorImageSize = section.settings.separator_image_size
+    assign itemsSpacing = section.settings.items_spacing
+    assign visibility = section.settings.visibility
+
+    #basic rem to px, multiply by 12 instead of 10 giving a ~20% extra for better quality.
+    assign itemImagePx = itemImageSize | times: 12 | round
+    assign itemImagePxDouble = itemImagePx | times: 2
+    assign itemImagePxTriple = itemImagePx | times: 3
+    assign separatorImagePx = separatorImageSize | times: 12 | round
+    assign separatorImagePxDouble = separatorImagePx | times: 2
+    assign separatorImagePxTriple = separatorImagePx | times: 3
+    assign loadingAttr = 'lazy'
+    if disableLazyLoading
+      assign loadingAttr = 'eager'
+    endif
+  -%}
+
+  <style>
+    #shopify-section-{{ section.id }} .navigation-bar {padding-top: calc(var(--global-sections-padding) * {{ section.settings.section_padding_top | divided_by: 100.00 }}); padding-bottom: calc(var(--global-sections-padding) * {{ section.settings.section_padding_bottom | divided_by: 100.00 }});}
+    #shopify-section-{{ section.id }} .navigation-bar-scroll {overflow-x: auto;}
+    {%- if section.settings.show_scroll_hint -%}
+    #shopify-section-{{ section.id }} .navigation-bar-scroll {scrollbar-width: none; -ms-overflow-style: none; background: linear-gradient(to right, var(--scheme-background-color) 30%, transparent), linear-gradient(to left, var(--scheme-background-color) 30%, transparent) 100% 0, radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.2), transparent), radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.2), transparent) 100% 0; background-repeat: no-repeat; background-size: 3em 100%, 3em 100%, 1.25em 100%, 1.25em 100%; background-attachment: local, local, scroll, scroll;}
+    {%- endif -%}
+    {%- if section.settings.show_scroll_hint -%}
+    #shopify-section-{{ section.id }} .navigation-bar-scroll::-webkit-scrollbar {display: none;}
+    {%- endif -%}
+    #shopify-section-{{ section.id }} .navigation-bar-list {--nav-item-border-radius: {{ itemBorderRadius }}rem; --nav-item-image-size: {{ itemImageSize }}rem; --nav-separator-image-size: {{ separatorImageSize }}rem; --nav-items-spacing: {{ itemsSpacing }}rem; display: flex; align-items: flex-start; justify-content: center; gap: var(--nav-items-spacing); margin: 0; padding: 0; list-style: none; width: max-content; min-width: 100%;}
+    #shopify-section-{{ section.id }} .navigation-bar-list-item {flex-shrink: 0; display: flex;}
+    #shopify-section-{{ section.id }} .navigation-bar-list-item.same-scheme-false {padding: {{ section.settings.items_padding }}; border-radius: var(--nav-item-border-radius);}
+    #shopify-section-{{ section.id }} .navigation-bar-item {display: inline-flex; align-items: center; gap: calc(var(--nav-items-spacing) / 2); text-decoration: none; color: inherit;}
+    #shopify-section-{{ section.id }} .navigation-bar-item.image-position-column {flex-direction: column; text-align: center; gap: calc(var(--nav-items-spacing) / 3);}
+    #shopify-section-{{ section.id }} .image-position-column .navigation-bar-item-image ~ .navigation-bar-item-text {max-width: min-content;}
+    #shopify-section-{{ section.id }} .navigation-bar-item-image {display: block; width: var(--nav-item-image-size); border-radius: var(--nav-item-border-radius); flex-shrink: 0;}
+    #shopify-section-{{ section.id }} .navigation-bar-separator {flex-shrink: 0; display: inline-flex; align-items: center; opacity: 0.6; pointer-events: none;}
+    #shopify-section-{{ section.id }} .navigation-bar-separator-image {display: block; width: var(--nav-separator-image-size); height: var(--nav-separator-image-size); object-fit: contain;}
+    @media (max-width: {{ settings.breakpoint_tablet }}) {
+      #shopify-section-{{ section.id }} .navigation-bar {padding-top: calc(var(--global-sections-padding) * {{ section.settings.section_padding_top_mobile | divided_by: 100.00 }}); padding-bottom: calc(var(--global-sections-padding) * {{ section.settings.section_padding_bottom_mobile | divided_by: 100.00 }});}
+    }
+    {%- if visibility == 'mobile_only' -%}
+    @media (min-width: {{ settings.breakpoint_tablet | plus: 0.001 }}em) {
+      #shopify-section-{{ section.id }} {display: none;}
+    }
+    {%- endif -%}
+  </style>
+
+  <div class="navigation-bar scheme color-{{ section.settings.color_scheme }}{% if section.settings.border_top %} scheme-border-top{% endif %}{% if section.settings.border_bottom %} scheme-border-bottom{% endif %}">
+    <nav class="navigation-bar-scroll container-left container-right" aria-label="{{ 'navigation_bar.navigation_aria_label' | t | escape }}">
+      <ul class="navigation-bar-list">
+        {%- for block in section.blocks -%}
+          {%- if block.type == 'item' -%}
+            {%- liquid
+              assign itemImage = block.settings.image
+              assign itemText = block.settings.text
+              assign itemLink = block.settings.link
+            -%}
+            <li class="navigation-bar-list-item {% if section.settings.items_color_scheme != section.settings.color_scheme %}scheme color-{{ section.settings.items_color_scheme }} same-scheme-false {% else %}same-scheme-true{% endif %}" {{ block.shopify_attributes }}>
+              {%- if itemLink != blank -%}
+                <a class="navigation-bar-item image-position-{{ itemImagePosition }}" href="{{ itemLink }}">
+              {%- else -%}
+                <span class="navigation-bar-item image-position-{{ itemImagePosition }}">
+              {%- endif -%}
+                {%- if itemImage != blank -%}
+                  <img
+                    class="navigation-bar-item-image"
+                    src="{{ itemImage | image_url: width: itemImagePx }}"
+                    srcset="{{ itemImage | image_url: width: itemImagePx }} 1x, {{ itemImage | image_url: width: itemImagePxDouble }} 2x, {{ itemImage | image_url: width: itemImagePxTriple }} 3x"
+                    width="{{ itemImagePx }}"
+                    height="{{ itemImagePx }}"
+                    loading="{{ loadingAttr }}"
+                    {% if disableLazyLoading %}fetchpriority="high"{% endif %}
+                    alt="{% if itemText == blank %}{{ itemImage.alt | escape }}{% endif %}"
+                  />
+                {%- endif -%}
+                {%- if itemText != blank -%}
+                  <span class="navigation-bar-item-text {{ itemFontStyle }} {{ itemTextSize }}">{{ itemText | escape }}</span>
+                {%- endif -%}
+              {%- if itemLink != blank -%}
+                </a>
+              {%- else -%}
+                </span>
+              {%- endif -%}
+            </li>
+            {%- if hasSeparator and forloop.last == false -%}
+              <li class="navigation-bar-separator" aria-hidden="true">
+                {%- if separatorImage != blank -%}
+                  <img
+                    class="navigation-bar-separator-image"
+                    src="{{ separatorImage | image_url: width: separatorImagePx }}"
+                    srcset="{{ separatorImage | image_url: width: separatorImagePx }} 1x, {{ separatorImage | image_url: width: separatorImagePxDouble }} 2x, {{ separatorImage | image_url: width: separatorImagePxTriple }} 3x"
+                    width="{{ separatorImagePx }}"
+                    height="{{ separatorImagePx }}"
+                    loading="{{ loadingAttr }}"
+                    {% if disableLazyLoading %}fetchpriority="high"{% endif %}
+                    alt=""
+                  />
+                {%- elsif separatorText != blank -%}
+                  <span class="navigation-bar-separator-text">{{ separatorText | escape }}</span>
+                {%- endif -%}
+              </li>
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+      </ul>
+    </nav>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Navigation Bar",
+  "class": "type-navigation-bar",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Section color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "color_scheme",
+      "id": "items_color_scheme",
+      "label": "Items color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "select",
+      "id": "visibility",
+      "label": "Visibility",
+      "options": [
+        {
+          "value": "all",
+          "label": "Desktop and Mobile"
+        },
+        {
+          "value": "mobile_only",
+          "label": "Mobile only"
+        }
+      ],
+      "default": "mobile_only"
+    },
+    {
+      "type": "select",
+      "id": "page_scope",
+      "label": "Show on pages",
+      "options": [
+        {
+          "value": "homepage",
+          "label": "Homepage only"
+        },
+        {
+          "value": "core",
+          "label": "Core pages (Home, collection, product)"
+        },
+        {
+          "value": "all",
+          "label": "All pages"
+        }
+      ],
+      "default": "homepage",
+      "info": "Controls where the section is rendered. When placed in a template outside of this scope, it is not output."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_scroll_hint",
+      "label": "Show scroll hint",
+      "default": false,
+      "info": "Displays a subtle shadow on the sides to indicate more items are available when the bar overflows horizontally."
+    },
+    {
+      "type": "range",
+      "id": "items_spacing",
+      "min": 0,
+      "max": 5,
+      "step": 0.1,
+      "unit": "rem",
+      "label": "Items spacing",
+      "default": 1.6
+    },
+    {
+      "visible_if": "{{ section.settings.color_scheme != section.settings.items_color_scheme }}",
+      "type": "text",
+      "id": "items_padding",
+      "label": "Items CSS padding when different color scheme",
+      "default": "0.25em 1em",
+      "info": "css padding [vertical horizontal] [top right bottom left], e.g.: 0.25em 1em"
+    },
+    {
+      "type": "range",
+      "id": "item_border_radius",
+      "min": 0,
+      "max": 10,
+      "step": 0.1,
+      "unit": "rem",
+      "label": "Items border radius",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "item_image_size",
+      "min": 2,
+      "max": 15,
+      "step": 0.2,
+      "unit": "rem",
+      "label": "Items image size",
+      "default": 7
+    },
+    {
+      "type": "select",
+      "id": "item_image_position",
+      "label": "Items image position",
+      "options": [
+        {
+          "value": "row",
+          "label": "Left of text"
+        },
+        {
+          "value": "column",
+          "label": "Above text"
+        }
+      ],
+      "default": "column"
+    },
+    {
+      "type": "select",
+      "id": "item_font_style",
+      "label": "Items font style",
+      "options": [
+        {
+          "value": "body-font",
+          "label": "Body"
+        },
+        {
+          "value": "heading-font",
+          "label": "Headings"
+        },
+        {
+          "value": "subheading",
+          "label": "Subheading"
+        }
+      ],
+      "default": "body-font"
+    },
+    {
+      "type": "range",
+      "id": "item_text_size",
+      "min": 1,
+      "max": 5,
+      "step": 1,
+      "unit": "p",
+      "label": "Items text size",
+      "default": 3,
+      "info": "Based on body font size"
+    },
+    {
+      "type": "header",
+      "content": "Separator"
+    },
+    {
+      "type": "paragraph",
+      "content": "Displayed between items. If both are set, the image takes precedence."
+    },
+    {
+      "type": "image_picker",
+      "id": "separator_image",
+      "label": "Separator image"
+    },
+    {
+      "type": "range",
+      "id": "separator_image_size",
+      "min": 0.1,
+      "max": 5,
+      "step": 0.1,
+      "unit": "rem",
+      "label": "Separator image size",
+      "default": 1.6
+    },
+    {
+      "type": "text",
+      "id": "separator_text",
+      "label": "Separator text",
+      "info": "e.g. · / |"
+    },
+    {
+      "type": "header",
+      "content": "Padding Desktop"
+    },
+    {
+      "type": "range",
+      "id": "section_padding_top",
+      "min": 0,
+      "max": 200,
+      "step": 10,
+      "unit": "%",
+      "label": "Outer padding top (Desktop)",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "section_padding_bottom",
+      "min": 0,
+      "max": 200,
+      "step": 10,
+      "unit": "%",
+      "label": "Outer padding bottom (Desktop)",
+      "default": 20
+    },
+    {
+      "type": "header",
+      "content": "Padding Mobile"
+    },
+    {
+      "type": "range",
+      "id": "section_padding_top_mobile",
+      "min": 0,
+      "max": 200,
+      "step": 10,
+      "unit": "%",
+      "label": "Outer padding top (Mobile)",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "section_padding_bottom_mobile",
+      "min": 0,
+      "max": 200,
+      "step": 10,
+      "unit": "%",
+      "label": "Outer padding bottom (Mobile)",
+      "default": 20
+    },
+    {
+      "type": "checkbox",
+      "id": "border_top",
+      "label": "Top border",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "border_bottom",
+      "label": "Bottom border",
+      "default": false
+    }
+  ],
+  "blocks": [
+    {
+      "type": "item",
+      "name": "Item",
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "An item can be an image, a text, or both."
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text",
+          "default": "Item"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Navigation Bar",
+      "blocks": [
+        {
+          "type": "item",
+          "settings": {
+            "text": "Top Picks"
+          }
+        },
+        {
+          "type": "item",
+          "settings": {
+            "text": "Best Sellers"
+          }
+        },
+        {
+          "type": "item",
+          "settings": {
+            "text": "New Arrivals"
+          }
+        },
+        {
+          "type": "item",
+          "settings": {
+            "text": "Sale"
+          }
+        },
+        {
+          "type": "item",
+          "settings": {
+            "text": "Recommended"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

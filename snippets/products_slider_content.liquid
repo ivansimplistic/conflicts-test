@@ -1,0 +1,66 @@
+{% doc %}
+  Renders a configurable product carousel wrapper with optional arrows, dots, and page counter.
+
+  @param {string} headContentHtml - HTML for the slider header content area.
+  @param {string} itemsHtml - HTML for the slider items (`keen-slider` children).
+  @param {object} [sectionSettings] - Optional `layout` and carousel UI flags (`show_arrows` and `show_dots` booleans).
+  @param {boolean} [initOndemand] - Adds `data-init-ondemand="true"` when true.
+  @param {number} [itemsDesktop] - Desktop `data-slides-per-view` value (defaults to 2).
+  @param {number} [itemsTablet] - Tablet `data-slides-per-view` value (defaults to 2).
+  @param {number} [itemsMobile] - Mobile `data-slides-per-view` value (defaults to 2).
+  @param {boolean} [showPageInfo] - Controls page counter visibility. Defaults to `settings.carousel_show_slider_pages`.
+{% enddoc %}
+
+{%- liquid
+  assign layout = sectionSettings.layout | default: 'carousel'
+  assign showPageInfo = showPageInfo | default: settings.carousel_show_slider_pages, allow_false: true
+  assign showArrows = sectionSettings.show_arrows | default: false, allow_false: true
+  assign showDots = sectionSettings.show_dots | default: false, allow_false: true
+-%}
+
+{%- if layout == 'carousel' -%}
+  <component-carousel class="carousel-element text-left" {% if initOndemand %}data-init-ondemand="true"{% endif %} data-carousel-mode="free-snap" data-carousel-loop-desktop="false" data-carousel-loop-mobile="false" data-carousel-autoplay="0" data-carousel-automove="0" data-slides-scroll-mode="{{settings.carousel_slides_scroll_mode}}" data-carousel-centered-desktop="" data-carousel-spacing-desktop="15" data-slides-per-view-desktop="{{itemsDesktop | default: 2}}" data-carousel-centered-tablet="" data-carousel-spacing-tablet="15" data-slides-per-view-tablet="{{itemsTablet | default: 2}}" data-carousel-centered-mobile="" data-carousel-spacing-mobile="10" data-slides-per-view-mobile="{{itemsMobile | default: 2}}" data-match-height-selectors=".title">
+    <div class="featured-head flex align-items-end justify-content-between">
+      <div class="info">
+        {{headContentHtml}}
+      </div>
+      {%- if showArrows -%}
+        <div class="keen-arrows flex">
+          {% render 'carousel_arrow', type: 'prev' %}
+          {% if showPageInfo and showDots == false or settings.carousel_dots_shape == 'circle' %}
+            <div class="keen-slider-page brand-font"></div>
+          {% endif %}
+          {% render 'carousel_arrow', type: 'next' %}
+        </div>
+      {%- endif -%}
+    </div>
+
+    <div class="keen">
+      <div class="keen-slider keen-slider-slide-margin">
+      {{itemsHtml}}
+      </div>
+      {%- if showDots -%}
+        <div class="keen-dots {{settings.carousel_dots_shape}} {{settings.carousel_dots_border | replace: true, 'border'}}">
+          {% if showPageInfo and settings.carousel_dots_shape == 'line' %}
+            <div class="keen-slider-page brand-font"></div>
+          {% endif %}
+        </div>
+      {%- elsif showArrows != true -%}
+        <div class="keen-nav-bar"></div>
+      {%- endif -%}
+
+    </div>
+  </component-carousel>
+{%- else -%}
+  <div class="carousel-element text-left">
+    <div class="featured-head flex align-items-end justify-content-between">
+      <div class="info">
+        {{headContentHtml}}
+      </div>
+    </div>
+
+    <div class="grid items-wrapper">
+      {{itemsHtml | replace: 'keen-slider-slide', 'grid-item'}}
+    </div>
+  </div>
+{%- endif -%}

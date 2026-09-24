@@ -1,0 +1,33 @@
+{%- liquid
+  capture discountCode
+    render 'get_discount_codes_applied', cart: cart
+  endcapture
+-%}
+
+<cart-discount-code>
+  <div class="field flex-1">
+    <input id="cart-discount-code" placeholder="{{ 'cart.discount_code.discount_code_label' | t | escape }}" type="text" aria-required="true" aria-label="{{ 'cart.discount_code.discount_code_label' | t | escape }}" autocomplete="off" />
+    <label for="cart-discount-code">{{ 'cart.discount_code.discount_code_label' | t }}</label>
+    <button class="btn apply" type="button" aria-label="{{ 'cart.discount_code.apply_caption' | t | escape }}">{{ 'cart.discount_code.apply_button' | t }}</button>
+  </div>
+  <div class="discount-error-message" style="display:none;">{{ 'cart.discount_code.invalid_message' | t }}</div>
+  {%- if discountCode != blank -%}
+    <div class="discount-code-wrapper p4 flex align-items-center justify-content-between">
+      <div class="discount-code-inner-title">{{ 'cart.discount_code.inner_title' | t }}</div>
+      <div class="discount-code-applied flex align-items-left">
+        {%- assign codes = discountCode | split: ',' -%}
+        {%- for code in codes -%}
+          <div class="discount-code-value">
+            {{ code }}
+            <button class="remove-discount btn" type="button" aria-label="{{ 'cart.discount_code.remove_caption' | t | escape }}" data-code="{{code}}">{%- render 'icons', icon: 'close' -%}</button>
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+    {% comment %}
+    <div class="discount-code-disclaimer">
+      {{ 'cart.discount_code.disclaimer' | t }}
+    </div> 
+    {% endcomment %}
+  {%- endif -%}
+</cart-discount-code>
