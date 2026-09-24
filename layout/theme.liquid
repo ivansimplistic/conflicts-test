@@ -12,6 +12,7 @@
       assign domainLang = domainLang | append: '/' | append: localization.language.iso_code
     endif
     -%}
+    
 
     {% for language in localization.available_languages %}
       {%- liquid 
